@@ -2,7 +2,12 @@
   <div class="panel-body">
     <div class="panel-group" id="root" role="tablist" aria-multiselectable="true">
     </div>
-    <div class="btn-group btn-group-sm pull-right">
+    <div class="flexbox flexbox-horizontal" style="justify-content: center" ng-if="!moduleRoot.hasOwnProperty('array')">
+      <button type="button" class="btn btn btn-success" ng-click="createBlocks()">Create blocks</button>
+    </div>
+    <div class="row" style="padding: 0px 14px 0px 14px" ng-if="moduleRoot.hasOwnProperty('array')">
+      <button type="button" class="btn btn-sm btn-danger" ng-click="deleteBlocks()">Delete blocks</button>
+      <div class="btn-group btn-group-sm pull-right">
           <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
                 Add Child <span class="caret"></span>
           </button>
@@ -10,5 +15,6 @@
             <li role="presentation" class="dropdown-header">Choose new child type</li>
             <li ng-repeat="type in moduleTypes"><a ng-click="addNewChild(type)">{{type}}</a></li>
           </ul>
+      </div>
     </div>
 </div>

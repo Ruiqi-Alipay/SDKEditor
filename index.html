@@ -2,12 +2,14 @@
 <html ng-app="sdkApp">
 	<head>
 		<meta charset="utf-8">
+		<link rel="shortcut icon" href="res/favicon.ico">
 		<!-- Latest compiled and minified CSS -->
 		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
 		<!-- Optional theme -->
 		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
 		<link rel="stylesheet" href="css/colorpicker.css">
 		<link rel="stylesheet" href="css/main.css">
+		<link rel="stylesheet" href="css/layout.css">
 
 		<script src="bower_components/jquery/dist/jquery.js"></script>
 		<script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
@@ -46,7 +48,7 @@
 			       <li ng-class="{'active' : appState.tabSelect==3}" class="dropdown">
 			          <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Actions<span class="caret"></span></a>
 			          <ul class="dropdown-menu" role="menu">
-			            <li ng-repeat="action in actionList"><a ng-click="appState.tabSelect=3;onActionSelected($index);">{{action.name}}</a></li>
+			            <li ng-repeat="action in actionList"><a ng-click="appState.tabSelect=3;onActionSelected($index);">{{action.parameter.name}}</a></li>
 			            <li class="divider"></li>
 			            <li><a ng-click="appState.tabSelect=3;onNewAction();">New action</a></li>
 			          </ul>
@@ -54,11 +56,28 @@
 		      </ul>
 		      <ul class="nav navbar-nav navbar-right r-padding">
 		      	<li><input style="padding-top: 10px;" type='file' class="custom-file-input" accept='.json' onchange="angular.element(this).scope().loadScript(this)"/></li>
-		      	<li><button ng-disabled="scriptForm.$invalid" type="button" class="btn btn-default bt-sm navbar-btn" ng-click="downloadScript()">下载模板</button></li>
+		      	<li><button ng-disabled="scriptForm.$invalid" type="button" class="btn btn-default bt-sm navbar-btn" ng-click="downloadScript()">导出模板</button></li>
 		      </ul>
 		    </div><!-- /.navbar-collapse -->
 		  </div><!-- /.container-fluid -->
 		</nav>
+
+		<div class="modal fade" id="newAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		  <div class="modal-dialog">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		        <h4 class="modal-title" id="myModalLabel">New action</h4>
+		      </div>
+		      <div class="modal-body">
+		        <input type="text" class="form-control" placeholder="Enter acton name">
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-primary">Create</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
 
 		<div class="row">
 
@@ -75,6 +94,7 @@
 					</ul>
 					<div form-properties ng-show="appState.formTap==1"></div>
 					<div block-root ng-show="appState.formTap==2"></div>
+            		<button type="button" class="btn btn-danger" ng-click="deleteAction()" ng-show="selectedIndex >= 0">Delete action</button>
 				</div>
 				<div class="col-md-4">
 					<div device-android style="position: fixed"></div>

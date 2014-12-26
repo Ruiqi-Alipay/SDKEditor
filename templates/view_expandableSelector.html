@@ -1,6 +1,6 @@
-<div class="flexbox-block" style="align-content: flex-start" ng-style="{'border': expand.border, 'width': expand.horWidth, 'height': expand.height, 'align-self': expand.verticalAlign, 'padding-top': expand.paddingTop, 'padding-right': expand.paddingRight, 'padding-bottom': expand.paddingBottom, 'padding-left': expand.paddingLeft, 'margin-top': expand.marginTop, 'margin-right': expand.marginRight, 'margin-bottom': expand.marginBottom, 'margin-left': expand.marginLeft, 'background': expand.background, 'border-radius': expand.borderRadius}">
+<div class="flexbox flexbox-vertical" ng-style="style">
 	<div expandable-item item-type="topStyle" module-index="{{itemSelect}}"></div>
-	<div ng-style="{'border': gap.border, 'width': gap.width, 'height': gap.height, 'align-self': gap.verticalAlign, 'padding-top': gap.paddingTop, 'padding-right': gap.paddingRight, 'padding-bottom': gap.paddingBottom, 'padding-left': gap.paddingLeft, 'margin-top': gap.marginTop, 'margin-right': gap.marginRight, 'margin-bottom': gap.marginBottom, 'margin-left': gap.marginLeft, 'background': gap.background, 'border-radius': gap.borderRadius}"></div>
+	<div ng-style="gapStyle"></div>
 	<div id="slideable" slideable style="width: 100%">
 		<div ng-repeat="module in itemModules" expandable-item item-type="childStyle" module-index="{{$index}}">
   		</div>

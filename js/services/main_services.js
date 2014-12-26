@@ -1,8 +1,21 @@
 var app = angular.module("sdkApp");
 
-app.factory("dataService", function($rootScope) {
+app.factory("dataService", function($rootScope, $timeout) {
 	var generateUuid = function() {
     	return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
+	};
+	var findPosition = function(array, name) {
+		for (var i = 0; i < array.length; i++) {
+			var content = array[i];
+			if (content.name === name) {
+				return content;
+			} else if (content.array) {
+				var result = findPosition(content.array, name);
+				if (result) {
+					return result;
+				}
+			}
+		}
 	};
 	var findPositionArray = function(array, name) {
 		for (var i = 0; i < array.length; i++) {
@@ -46,28 +59,44 @@ app.factory("dataService", function($rootScope) {
 			}
 		}
 	};
-	var getBlockHierarchy = function(array, name) {
+	var getBlockHierarchyLevel = function(array, name) {
 		for (var i = 0; i < array.length; i++) {
 			var content = array[i];
 			if (content.name === name) {
 				return 0;
 			} else if (content.array) {
-				var result = getBlockHierarchy(content.array, name);
+				var result = getBlockHierarchyLevel(content.array, name);
 				if (result >= 0) {
 					return result + 1;
 				}
 			}
 		}
 	};
+	var getBlockHierarchy = function(array, name) {
+		for (var i = 0; i < array.length; i++) {
+			var content = array[i];
+			if (content.name === name) {
+				return [content.name];
+			} else if (content.array) {
+				var result = getBlockHierarchy(content.array, name);
+				if (result) {
+					result.push(content.name);
+					return result;
+				}
+			}
+		}
+	};
+
 		var deleteBlockModule = function(arrray) {
 			arrray.forEach(function(value) {
-				delete blockMap[value.name];
+				delete moduleMap[value.name];
+				delete moduleStyleMap[value.name];
 				if (value.array) {
-					blockMap(value.array);
+					deleteBlockModule(value.array);
 				}
 			});
 		};
-		var createModule = function(compile, scope, target, position, type, parentId, block) {
+		var createModule = function(compile, scope, target, position, type, parentId, module) {
             var elemetId = generateUuid() + generateUuid() + generateUuid();
 			var	newElement = compile("<div block-module element-id='" + elemetId + "' view-type='" + type + "'></div>")(scope);
             // record position
@@ -86,50 +115,54 @@ app.factory("dataService", function($rootScope) {
             	});
             }
 
-            if (!block) {
-            	block = {};
-				block.type = type;
+            if (!module) {
+            	module = {};
+				module.type = type;
 				if (type === "block" || type === "component") {
-					block.width = -1;
-					block.height = -2;
+					module.width = -1;
+					module.height = -2;
 				} else if (type === "button") {
-					block.width = -2;
-					block.height = -2;
-					block.text = type;
-					block.size = 24;
-					block.image = "local:normal;local:hover;local:disable";
-				} else if (type === "label") {
-					block.width = -2;
-					block.height = -2;
-					block.text = type;
-					block.textalign = "left";
-					block.size = 18;
+					module.width = -2;
+					module.height = -2;
+					module.text = 'Button';
+					module.size = 34;
+					module.image = "local:normal;local:hover;local:disable";
+				} else if (type === "label" || type === 'link') {
+					module.width = -2;
+					module.height = -2;
+					module.text = type;
+					module.textAlign = "left";
+					module.size = 34;
+					if (type === 'link') {
+						module.underline = 'true';
+					}
 				} else if (type === "img") {
-					block.width = -2;
-					block.height = -2;
+					module.width = -2;
+					module.height = -2;
+					module.src = '';
 				} else if (type === "line") {
-					block.width = -1;
-					block.height = -2;
-				} else if (type === "link") {
-
+					module.width = -1;
+					module.height = 1;
+					module.image = 'rgb(255, 0, 0)';
 				}
             }
 
-            // record ontent
-            blockMap[elemetId] = block;
+            // record
+            moduleMap[elemetId] = module;
 
             return elemetId;
 		};
     var createView = function(compile, scope, target, append, elementId) {
-	   	var block = blockMap[elementId];
-		if (block.content === 'bottomView') {
-			target = bottomBar;
-		}
+	   	var block = moduleMap[elementId];
 		var directive = 'item-view';
 	    if (block.type === 'expandableSelector') {
 	    	directive = 'expandable-selector';
 	    } 
 		var element = compile("<div " + directive + " element-id='" + elementId + "'></div>")(scope);
+		var module = moduleMap[elementId];
+		if (module.content === 'bottomView') {
+			target = bottomBar;
+		}
 		if (append) {
             target.append(element);
         } else {
@@ -147,7 +180,7 @@ app.factory("dataService", function($rootScope) {
 
 					if (typeof content === 'object') {
 						if (key === 'action') {
-							actionList.push(content);
+							actionList.push({parameter: content});
 						}
 
 						collectActions(actionList, content);
@@ -204,6 +237,21 @@ app.factory("dataService", function($rootScope) {
 			tv: 'text',
 			cmd: 'object'
 		},
+		parameter: {
+			name: 'text',
+			display: ['true', 'false'],
+			params: 'object',
+			progressBar: 'object',
+			form: 'object'
+		},
+		params: {
+			channelType: ['balance'],
+			sessionId: 'text'
+		},
+		progressBar: {
+			needCover: ['true', 'false'],
+			text: 'text'
+		},
 		cmd: {
 			cancel: 'text',
 			load: 'text',
@@ -217,6 +265,7 @@ app.factory("dataService", function($rootScope) {
 			wCookie: ['T', 'F']
 		},
 		form: {
+			oneTime: ['true', 'false'],
 			actionBar: 'object',
 			onback: 'object',
 			wapintercept: 'object',
@@ -227,21 +276,25 @@ app.factory("dataService", function($rootScope) {
 		blocks: {
 			type: ["block", "component", "button", "label", "img", "icon", "link", "line", "expandableSelector"],
 			block: ['width','height', 'align', 'vertical-align', 'margin', 'padding',
-						'image', 'filter', 'css', 'display'],
+						'image', 'filter', 'css', 'display', 'content'],
 			component: ['width','height', 'align', 'vertical-align', 'margin', 'padding',
-						'image', 'filter', 'css', 'display'],
-			button: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
+						'image', 'filter', 'css', 'display', 'content'],
+			button: ['action', 'width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
 						'image', 'text', 'filter', 'css', 'display'],
 			label: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
 						'image', 'text', 'text-align', 'filter', 'html', 'underline', 'css', 'display'],
-			img: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color',
+			img: ['width','height', 'src', 'align', 'vertical-align', 'margin', 'padding', 'color',
 						'image', 'css', 'display'],
 			icon: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color',
 						'image', 'css', 'display'],
-			link: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
+			link: ['action', 'width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
 						'image', 'text', 'text-align', 'filter', 'html', 'underline', 'css', 'display'],
 			line: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
 						'image', 'text', 'text-align', 'filter', 'html', 'underline', 'css', 'display'],
+			input: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'display', 'imeAct',
+						'hint', 'empty_msg', 'keyboard'],
+			password: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'display', 'imeAct',
+						'hint', 'empty_msg', 'keyboard'],
 			expandableSelector: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
 						'image', 'text', 'text-align', 'filter', 'html', 'underline', 'css', 'display'],
 		},
@@ -267,43 +320,55 @@ app.factory("dataService", function($rootScope) {
 		width: 'text',
 		height: 'text',
 		align: ['left', 'center', 'right'],
-		verticalAlign: ['top', 'middle', 'bottom'],
+		'vertical-align': ['top', 'middle', 'bottom'],
 		margin: 'text',
 		padding: 'text',
 		color: 'color',
 		size: 'text',
 		image: 'color',
 		text: 'text',
-		textAlign: ['left', 'center', 'right'],
+		'text-align': ['left', 'center', 'right'],
 		filter: 'text',
 		html: 'text',
 		underline: ['true', 'false'],
 		css: 'text',
-		display: ['true', 'false']
+		display: ['true', 'false'],
+		content: ['bottomView'],
+		action: 'text',
+		imeAct: ['next'],
+		hint: 'text',
+		empty_msg: 'text',
+		keyboard: ['en', 'cn']
 	};
 
 	var actionList = [];
 	var mainForm = {
-		form: {},
-		blocks: [],
-		name: 'main-form'
+		parameter: {
+			form: {}
+		},
+		blocks: []
 	};
-	var selectedForm;
+	var selectedForm = mainForm;
 	var selectedFormIndex;
 	var scriptRoot = {};
 
-	var blockMap = {};
+	var moduleMap = {};
+	var moduleStyleMap = {};
 	var blockPositionTree = [{
-		name: 'root',
-		array: []
+		name: 'root'
 	}];
-
-	var itemSelection = {
-		value: ''
-	};
 	var bottomBar;
+	var highlightView = {
+		elementId: ''
+	};
 
 	return {
+		setBottombar: function(bar) {
+			bottomBar = bar;
+		},
+		getBottombar: function() {
+			return bottomBar;
+		},
 		assembleScript: function() {
 			var script = {};
 			jQuery.extend(script, scriptRoot);
@@ -320,6 +385,23 @@ app.factory("dataService", function($rootScope) {
 			}
 			return script;
 		},
+		createNewAction: function() {
+			actionList.push({
+				parameter: {
+					name: 'js://'
+				}
+			});
+			this.selectForm(actionList.length - 1);
+		},
+		deleteAction: function() {
+			actionList.splice(selectedFormIndex, 1);
+			selectedFormIndex = -2;
+			if (actionList.length == 0) {
+				this.selectForm(-1);
+			} else {
+				this.selectForm(0);
+			}
+		},
 		selectForm: function(index) {
 			if (selectedFormIndex == index) {
 				return;
@@ -327,15 +409,30 @@ app.factory("dataService", function($rootScope) {
 
 			selectedFormIndex = index;
 			selectedForm = index < 0 ? mainForm : actionList[index];
-			blockMap = {};
-			blockPositionTree = [{
-				name: 'root',
-				array: []
-			}];
+			moduleMap = {};
+			moduleStyleMap = {};
+			if (selectedForm.blocks) {
+				blockPositionTree[0].array = [];
+			} else {
+				delete blockPositionTree[0]['array'];
+			}
 			$rootScope.$broadcast('sdk:panelSelectionChange');
 		},
-		getSelectedForm: function() {
+		createSelectFormBlocks: function() {
+			selectedForm.blocks = [];
+			blockPositionTree[0].array = [];
+		},
+		getSelectedFormIndex: function() {
+			return selectedFormIndex;
+		},
+		getSelectForm: function() {
 			return selectedForm;
+		},
+		getSelectedFormParameters: function() {
+			return selectedForm.parameter;
+		},
+		getSelectedFormBlocks: function() {
+			return selectedForm.blocks;
 		},
 		getScriptRoot: function() {
 			return scriptRoot;
@@ -346,17 +443,18 @@ app.factory("dataService", function($rootScope) {
 			var mainBlocks = newScript.form.blocks;
 			delete newScript.form.blocks;
 			mainForm = {
-				form: newScript.form,
-				blocks: mainBlocks,
-				name: 'main-form'
+				parameter: {
+					form: newScript.form
+				},
+				blocks: mainBlocks
 			};
 			actionList.length = 0;
 			collectActions(actionList, mainBlocks);
 			for (var index in actionList) {
 				var action = actionList[index];
-				if (action.form && action.form.blocks) {
-					action.blocks = action.form.blocks;
-					delete action.form.blocks;
+				if (action.parameter.form && action.parameter.form.blocks) {
+					action.blocks = action.parameter.form.blocks;
+					delete action.parameter.form.blocks;
 				}
 			}
 
@@ -374,7 +472,7 @@ app.factory("dataService", function($rootScope) {
 			return moduleProtocol;
 		},
 		getPropertyDefaultValue: function(name) {
-                    if (name === 'align' || name === 'text-align') {
+                if (name === 'align' || name === 'text-align') {
                         return 'left';
                     } else if (name === 'width') {
                         return -1;
@@ -386,68 +484,61 @@ app.factory("dataService", function($rootScope) {
                     	return '';
                     }
 		},
-		moduleDataToView: function(view, module) {
-				var processedItem = [];
-				var widthHeight = this.processWidthHeight(module.width, module.height);
-				view.size = module.size * 2 / 3;
-				view.width = widthHeight[0];
-				view.height = widthHeight[1];
-				view.horWidth = view.width;
-				processedItem.push('width');
-				processedItem.push('height');
-				processedItem.push('size');
+		moduleDataToCSS: function(style, module, elementId) {
+				var width = this.processWidth(module.width, module.type);
+				var height = this.processHeight(module.height, module.type);
+				style['font-size'] = module.size * 2 / 3;
+				style['width'] = width;
+				style['height'] = height;
+				style['max-width'] = width;
+				style['max-height'] = height;
+				if (module.type === 'img' || module.type === 'icon') {
+					style['min-width'] = width;
+					style['min-height'] = height;
+				}
 
 				var text = this.processText(module.text);
 				if (text) {
-					view.text = text;
+					style['text'] = text;
 				}
-				processedItem.push('text');
 
-				var hvAlign = this.processAlign(module.align, module['vertical-align'], module['text-align']);
-				view.align = hvAlign[0];
-				view.verticalAlign = hvAlign[1];
-				if (view.align === 'center' || view.align === 'flex-end') {
-					view.horWidth = '100%';
+				if (elementId) {
+					var hvAlign = this.processAlign(module.align, module['vertical-align']);
+					var parentId = findParentId(blockPositionTree, elementId);
+					var parentStyle = moduleStyleMap[parentId];
+					var parentModule = moduleMap[parentId];
+					if (parentId == 'root' || parentModule.type === 'block') {
+						style['align-self'] = hvAlign[0];
+						parentStyle['justify-content'] = hvAlign[1];
+					} else if (parentModule.type === 'component') {
+						style['align-self'] = hvAlign[1];
+						parentStyle['justify-content'] = hvAlign[0]
+					}
+					style['text-align'] = module['text-align'];
 				}
-				processedItem.push('verticalAlign');
-				processedItem.push('textAlign');
-				processedItem.push('align');
 				
 				if (module.html === 'true' && module.text) {
 					element.html(module.text);
 				}
-				processedItem.push('html');
 
-				view.image = module.image;
-				view.color = module.color;
-
-				processedItem.push('image');
-				processedItem.push('color');
+				style['background'] = module.image;
+				style['color'] = module.color;
 
 				var padding = this.processPadding(module.padding);
-	            view.paddingTop = padding[0];
-	            view.paddingLeft = padding[1];
-	            view.paddingBottom = padding[2];
-	            view.paddingRight = padding[3];
-	            processedItem.push('padding');
+	            style['padding-top'] = padding[0];
+	            style['padding-left']  = padding[1];
+	            style['padding-bottom']  = padding[2];
+	            style['padding-right']  = padding[3];
 
 				var margin = this.processPadding(module.margin);
-	            view.marginTop = margin[0];
-	            view.marginLeft = margin[1];
-	            view.marginBottom = margin[2];
-	            view.marginRight = margin[3];
-	            processedItem.push('margin');
+	            style['margin-top'] = margin[0];
+	            style['margin-left'] = margin[1];
+	            style['margin-bottom']  = margin[2];
+	            style['margin-right'] = margin[3];
 
 	            var filterMap = this.processFilter(module.filter);
 	            if ('corner' in filterMap) {
-	            	view.borderRadius = filterMap['corner'];
-	            }
-	            processedItem.push('filter');
-
-	            for (var property in module) {
-	            	if (!(property in processedItem)) {
-	            		// view[property] = module[property];
-	            	}
+	            	style['border-radius'] = filterMap['corner'];
 	            }
 		},
 		processFilter: function(filter) {
@@ -465,7 +556,7 @@ app.factory("dataService", function($rootScope) {
 	            }
 	        return result;
 		},
-		processAlign: function(align, verticlAlign, textalign) {
+		processAlign: function(align, verticlAlign) {
 				var result = ['flex-start', 'flex-start'];
 				if (align) {
 					if (align == 'left') {
@@ -505,44 +596,53 @@ app.factory("dataService", function($rootScope) {
 					}
 				}
 		},
-		processWidthHeight: function(width, height) {
-            	var result = [];
+		processWidth: function(width, moduleType) {
             	if (width) {
 					if (width == -1) {
-						result[0] = "100%";
+						return "100%";
 					} else if (width == -2) {
-						result[0] = '';
+						return '';
 					} else {
 						var presentIndex = width.indexOf('%');
 						if (presentIndex < 0) {
 							var pxIndex = width.indexOf('px');
 							if (pxIndex > 0) {
-								width = width.splice(0, pxIndex);
+								width = width.slice(0, pxIndex);
 							}
-							result[0] = width * 2 / 3 +'px';
+							return width * 2 / 3 +'px';
 						} else {
-							result[0] = width;
+							return width;
 						}
 					}
             	} else {
-            		result[0] = "100%";
+            		if (moduleType === 'img' || moduleType === 'icon') {
+            			return '';
+            		} else {
+            			return '100%';
+            		}
             	}
+		},
+		processHeight: function(height, moduleType) {
             	if (height) {
 					if (height == -1) {
-						result[1] = "100%";
+						return "100%";
 					} else if (height == -2) {
-						result[1] = '';
+						return '';
 					} else {
-						var pxIndex = height.indexOf('px');
-						if (pxIndex > 0) {
-							height = height.substr(0, pxIndex);
+						var presentIndex = height.indexOf('%');
+						if (presentIndex < 0) {
+							var pxIndex = height.indexOf('px');
+							if (pxIndex > 0) {
+								height = height.slice(0, pxIndex);
+							}
+							return height * 2 / 3 +'px';
+						} else {
+							return height;
 						}
-						result[1] = height * 2 / 3 + 'px';
 					}
             	} else {
-            		result[1] = '';
+            		return '';
             	}
-            	return result;
 		},
 		processPadding: function(padding) {
 			var result = [];
@@ -560,28 +660,46 @@ app.factory("dataService", function($rootScope) {
             }
             return result;
 		},
-		resetSelection: function(tree) {
-			if (itemSelection.value !== tree) {
-				itemSelection.value = tree;
-			} else {
-				itemSelection.value = '';
-			}
+		setHighlightViewId: function(elementId) {
+			highlightView.elementId = elementId;
 		},
-		getItemSelection: function() {
-			return itemSelection;
+		getHighlightView: function() {
+			return highlightView;
 		},
 		getModuleProperties: function() {
 			return fullProperites;
 		},
 		getHierarchyColor: function(elementId) {
-			var hierarchy = getBlockHierarchy(blockPositionTree, elementId);
+			var hierarchy = getBlockHierarchyLevel(blockPositionTree, elementId);
 			return hierarchyColor[hierarchy];
+		},
+		getPosition: function(elementId) {
+			return findPosition(blockPositionTree, elementId);
+		},
+		getBlockRoot: function() {
+			return blockPositionTree[0];
+		},
+		selectPanel: function(elementId) {
+			var selectBranch = getBlockHierarchy(blockPositionTree, elementId);
+			var selectHash = {};
+			selectBranch.forEach(function(value) {
+				selectHash[value] = '';
+			});
+
+			for (var i = selectBranch.length - 1; i >= 0; i--) {
+				$rootScope.$broadcast('module:open-' + selectBranch[i]);
+			}
+			for (var element in moduleMap) {
+				if (!(element in selectHash)) {
+					$rootScope.$broadcast('module:close-' + element);
+				}
+			}
+		    $timeout(function() {
+				$rootScope.$broadcast('module:open-' + elementId + '-finished');
+		    }, 500);
 		},
 		getVariable: function(key) {
 			return variable.value[key];
-		},
-		setBottomBar: function(element) {
-			bottomBar = element;
 		},
 		createModule: function(compile, scope, target, position, type, parentId, block) {
 			return createModule(compile, scope, target, position, type, parentId, block)
@@ -602,7 +720,15 @@ app.factory("dataService", function($rootScope) {
             return newTask;
         },
 		getModuleBlock: function(elementId) {
-			return blockMap[elementId];
+			return moduleMap[elementId];
+		},
+		getModuleCssStyle: function(elementId) {
+			var style = moduleStyleMap[elementId];
+			if (!style) {
+				style = {};
+				moduleStyleMap[elementId] = style;
+			}
+			return style;
 		},
 		getBlockParentId: function(elementId) {
 			return findParentId(blockPositionTree, elementId);
@@ -627,13 +753,27 @@ app.factory("dataService", function($rootScope) {
 	    	});
     	},
 		deleteBlockModule: function(elementId) {
-			delete blockMap[elementId];
-			var parentId = findParentId(blockPositionTree, elementId);
-			var changeArray = findPositionArray(blockPositionTree, parentId);
-			var deleteInedx = findBlockPosition(changeArray, elementId);
-			var deleteItem = changeArray.splice(deleteInedx, 1);
-			if (deleteItem.array) {
-				deleteBlockModule(deleteItem.array);
+			delete moduleMap[elementId];
+			delete moduleStyleMap[elementId];
+			if (elementId === 'root') {
+				var deleteArray = findPositionArray(blockPositionTree, elementId);
+				deleteArray.forEach(function(item) {
+					delete moduleMap[item.name];
+					delete moduleStyleMap[item.name];
+					if (item.array) {
+						deleteBlockModule(item.array);
+					}
+				});
+
+				delete blockPositionTree[0]['array'];
+			} else {
+				var parentId = findParentId(blockPositionTree, elementId);
+				var changeArray = findPositionArray(blockPositionTree, parentId);
+				var deleteInedx = findBlockPosition(changeArray, elementId);
+				var deleteItem = changeArray.splice(deleteInedx, 1);
+				if (deleteItem.array) {
+					deleteBlockModule(deleteItem.array);
+				}
 			}
 		}
 	};

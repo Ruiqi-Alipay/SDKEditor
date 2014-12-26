@@ -6,13 +6,13 @@ app.controller("mainController", function($scope, $rootScope, dataService) {
 	$scope.loadFile = {};
 	$scope.onMainFormSelected = function() {
 		dataService.selectForm(-1);
-	}
+	};
 	$scope.onActionSelected = function(index) {
 		dataService.selectForm(index);
-	}
+	};
 	$scope.onNewAction = function() {
-
-	}
+		dataService.createNewAction();
+	};
 	$scope.$on('sdk:newScriptLoaded', function(event) {
 		$scope.appState.tabSelect = 1;
 	});
@@ -47,4 +47,10 @@ app.controller("mainController", function($scope, $rootScope, dataService) {
 		pom.setAttribute('download', saveFileName);
 		pom.click();
 	};
+	$scope.deleteAction = function() {
+		dataService.deleteAction();
+	};
+    $scope.$on('sdk:panelSelectionChange', function(event) {
+        $scope.selectedIndex = dataService.getSelectedFormIndex();
+    });
 });

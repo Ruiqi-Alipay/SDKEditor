@@ -1,6 +1,6 @@
 var app = angular.module("sdkApp");
 
-app.directive("itemView", function($compile, $location, $anchorScroll, dataService) {
+app.directive("itemView", function($compile, dataService) {
   	return {
     	restrict: "A",
     	replace: true,
@@ -15,27 +15,25 @@ app.directive("itemView", function($compile, $location, $anchorScroll, dataServi
 				return "templates/view_img.html";
 			} else if (data.type === "component"){
 				return "templates/view_component.html";
-			} else if (data.type === 'password' || data.type === 'edittext') {
+			} else if (data.type === 'password' || data.type === 'input') {
                 return "templates/view_input.html"
             } else {
 				return "templates/view_block.html";
 			}
     	},
     	link: function (scope, element, attr) {
-    		$anchorScroll.yOffset = 250;
-    		scope.viewData = {};
+    		scope.style = dataService.getModuleCssStyle(attr.elementId);
     		scope.module = dataService.getModuleBlock(attr.elementId);
-    		scope.selection = dataService.getItemSelection();
+    		scope.highlightView = dataService.getHighlightView();
 
             scope.$watch('module', function(newValue, oldValue) {
-                dataService.moduleDataToView(scope.viewData, newValue);
+                dataService.moduleDataToCSS(scope.style, newValue, attr.elementId);
             }, true);
-
-            scope.$watch('selection', function(newValue, oldValue) {
-                if (newValue.value === attr.elementId) {
-                	scope.viewData.border = '1px dashed red';
+            scope.$watch('highlightView', function(newValue, oldValue) {
+                if (newValue.elementId === attr.elementId) {
+                	scope.style['border'] = '2px dashed red';
                 } else {
-					scope.viewData.border = '';
+					scope.style['border'] = '';
                 }
             }, true);
             scope.$on('delete:' + attr.elementId, function(event) {
@@ -49,13 +47,11 @@ app.directive("itemView", function($compile, $location, $anchorScroll, dataServi
                     dataService.createView($compile, scope, element, true, elementId);
                 });
             }
-
-            scope.viewClicked = function() {
-            	dataService.resetSelection(attr.elementId);
-            	scope.viewData.border = '2px dashed red';
-            	$location.hash(attr.elementId + '-collapse');
-            	$anchorScroll();
-            };
+            element.bind('click', function (e) {
+                e.stopPropagation();
+                dataService.setHighlightViewId(attr.elementId);
+                dataService.selectPanel(attr.elementId);
+            })
 
             if (scope.module.value) {
                 dataService.recursiveProcessView($compile, scope, element, attr.elementId);

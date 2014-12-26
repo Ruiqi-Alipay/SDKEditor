@@ -6,40 +6,59 @@ app.directive("deviceAndroid", function($compile, $rootScope, dataService) {
     	replace: true,
     	templateUrl: "templates/device_android.html",
     	link: function (scope, element, attr) {
-    		dataService.setBottomBar(element.find('.bottom-bar'));
-            scope.activity = {};
-            scope.form = {};
+            var bottomBar = element.find('.bottom-bar');
+            dataService.setBottombar(bottomBar);
+            scope.style = dataService.getModuleCssStyle('root');
+
+            scope.$on('sdk:panelSelectionChange', function(event) {
+                var target = element.find(".activity");
+                target.html('');
+                bottomBar.html('');
+                scope.style = dataService.getModuleCssStyle('root');
+                scope.formParameters = dataService.getSelectedFormParameters();
+            });
             scope.$on('append:root', function(event, elementId) {
                 var target = element.find(".activity");
                 dataService.createView($compile, scope, target, true, elementId);
             });
-            scope.$on('sdk:moduleLoaded', function(event) {
-                var data = dataService.getSelectedForm();
-                var bottomBar = element.find(".bottom-bar");
-                bottomBar.html('');
-            	var target = element.find(".activity");
+            scope.$on('delete:root', function(event) {
+                var target = element.find(".activity");
                 target.html('');
+            });
+            scope.$on('sdk:moduleLoaded', function(event) {
+                var target = element.find(".activity");
                 dataService.recursiveProcessView($compile, scope, target, 'root');
-
-                scope.form = data.form;
+                scope.formParameters = dataService.getSelectedFormParameters();
                 $rootScope.$broadcast('sdk:actionBarChange');
             });
-            scope.$watch('form', function(newValue, oldValue) {
-                scope.activity.type = newValue.type;
-
-                if (newValue.type === "popupwin") {
-                    scope.activity.width = '80%';
-                    scope.activity.height = '';
-                    scope.activity.align = 'center';
-                    scope.activity.paddingTop = '0px';
+            scope.$watch('formParameters', function(newValue, oldValue) {
+                if (!newValue || !newValue.form) {
+                    return;
+                }
+                if (newValue.form.type === "popupwin") {
+                    scope.style['width'] = '80%';
+                    scope.style['height'] = '';
+                    scope.style['align-self'] = 'center';
+                    scope.style['background'] = 'white';
+                    scope.style['border-radius'] = '4px';
+                    scope.style['-moz-box-shadow'] = '0 0 5px 5px #C0C0C0';
+                    scope.style['-webkit-box-shadow'] = '0 0 5px 5px #C0C0C0';
+                    scope.style['box-shadow'] = '0 0 5px 5px #C0C0C0';
+                    scope.style['margin'] = 'auto auto';
+                    scope.style['padding-top'] = '0px';
                 } else {
-                    scope.activity.width = '100%';
-                    scope.activity.height = '100%';
-                    scope.activity.align = 'flex-start';
-                    if (newValue.actionBar) {
-                        scope.activity.paddingTop = '48px';
+                    scope.style['width'] = '100%';
+                    scope.style['height'] = '';
+                    scope.style['background'] = '#eee';
+                    scope.style['border-radius'] = '';
+                    scope.style['-moz-box-shadow'] = '';
+                    scope.style['-webkit-box-shadow'] = '';
+                    scope.style['box-shadow'] = '';
+                    scope.style['margin'] = '';
+                    if (newValue.form.actionBar) {
+                        scope.style['padding-top'] = '48px';
                     } else {
-                        scope.activity.paddingTop = '0px';
+                        scope.style['padding-top'] = '0px';
                     }
                 }
                 
@@ -55,7 +74,7 @@ app.directive("actionBar", function(dataService) {
     	templateUrl: "templates/action_bar.html",
     	link: function (scope, element, attr) {
     		scope.$on('sdk:actionBarChange', function(event) {
-                var data = dataService.getSelectedForm();
+                var data = dataService.getSelectedFormParameters();
                 if (data.form) {
                     scope.bar = data.form.actionBar;
                 } else {

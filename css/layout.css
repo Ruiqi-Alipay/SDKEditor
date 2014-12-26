@@ -1,0 +1,40 @@
+.flexbox {
+	display: -webkit-box;
+	display: -moz-box;
+	display: -ms-flexbox;
+	display: -webkit-flex;
+	display: flex;
+}
+
+.flexbox-vertical {
+	flex-direction: column;
+	justify-content: flex-start;
+}
+
+.flexbox-horizontal {
+	flex-direction: row;
+	justify-content: flex-start;
+}
+
+.aliButton {
+	background-color:#ff911c;
+	-moz-border-radius:28px;
+	-webkit-border-radius:28px;
+	border-radius: 3px;
+	border:1px solid #c77d45;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:arial;
+	font-size:17px;
+	padding:16px 31px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #473b1b;
+}
+.aliButton:hover {
+	background-color:#de8a0d;
+}
+.aliButton:active {
+	position:relative;
+	top:1px;
+}

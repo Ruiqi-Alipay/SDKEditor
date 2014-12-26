@@ -1,9 +1,8 @@
 <div class="panel panel-default" ng-style="{'background': ctrl.background}">
-    <div class="panel-heading block-header" role="tab" id="headingId" data-toggle="collapse"
-        data-parent="#accordion" href="#collapseId" aria-expanded="true" aria-controls="collapseId" ng-click="blockPanelClicked()">
+    <div class="panel-heading block-header" role="tab" id="header" ng-click="blockPanelClicked()">
       <p class="panel-title"><a ><strong>{{block.type || block.name}}</strong>{{ctrl.title}} <span ng-show="block.type=='block' || block.type=='component'" class="badge">{{ctrl.childNum}}</span></a></p>
     </div>
-    <div id="collapseId" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingId">
+    <div id="body" class="panel-collapse collapse" role="tabpanel">
       <div class="panel-body">
         <div class="row" style="padding: 0px 14px 14px 14px">
           <div class="btn-group btn-group-sm pull-right">
@@ -17,7 +16,7 @@
           </div>
         </div>
         <div class="row block-item">
-          <div class="col-sm-6 block-item" ng-repeat="property in properties">
+          <div class="block-item" ng-class="{'col-sm-12': property==='action' || property==='image', 'col-sm-6': property!='action'}" ng-repeat="property in properties">
               <div class="input-group">
                 <div class="input-group-btn">
                   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">{{property}} <span class="caret"></span></button>
@@ -29,7 +28,7 @@
                 <span ng-switch on="getPropertyProtocolType(property)">
                   <input ng-switch-when="color" type="text" name="value" class="form-control" colorpicker="rgb" ng-model="block[property]">
                   <select ng-switch-when="array" class="form-control form-control-sm" ng-model="block[property]">
-                    <option ng-repeat="item in getPropertyProtocolValue(key)">{{item}}</option>
+                    <option ng-repeat="item in getPropertyProtocolValue(property)">{{item}}</option>
                   </select>
                   <input ng-switch-default type="text" name="value" class="form-control" ng-model="block[property]">
                 </span>
@@ -47,7 +46,7 @@
             </div>
           </div>
         </div>
-        <div id="container" class="panel-group inbody-block" role="tablist" aria-multiselectable="true">
+        <div id="container" class="panel-group" role="tablist" aria-multiselectable="true">
         </div>
         <div class="row" style="padding: 0px 14px 0px 14px">
           <button type="button" class="btn btn-sm btn-danger" ng-click="deleteElement()">Delete</button>

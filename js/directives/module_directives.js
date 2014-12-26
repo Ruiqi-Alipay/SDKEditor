@@ -8,9 +8,9 @@ app.directive("blockRoot", function ($compile, $rootScope, dataService) {
         templateUrl: "templates/block_root.html",
         link: function (scope, element, attr) {
             var runingTask = 0;
-            scope.moduleTypes = ["block", "component", "button", "label", "img", "link", "line", "expandableSelector"];
+            scope.moduleRoot = dataService.getBlockRoot();
+            scope.moduleTypes = dataService.getProtocol('blocks').type;
             scope.addNewChild = function(type) {
-                element.find('.collapse').collapse('hide');
                 var container = element.find("#root");
                 var elementId = dataService.createModule($compile, scope, container, -1, type, 'root');
                 $rootScope.$broadcast('append:root', elementId);
@@ -24,16 +24,25 @@ app.directive("blockRoot", function ($compile, $rootScope, dataService) {
             scope.addNewtask = function(count) {
                 runingTask += parseInt(count);
             };
+            scope.deleteBlocks = function() {
+                var connatiner = element.find("#root");
+                connatiner.html('');
+                dataService.deleteBlockModule('root');
+                $rootScope.$broadcast('delete:' + 'root');
+            };
+            scope.createBlocks = function() {
+                dataService.createSelectFormBlocks();
+            }
             scope.$on('childDeleted:' + 'root', function(event) {
                 var container = element.find("#root");
                 var childNum = container.children("div").length;
             });
             scope.$on('sdk:panelSelectionChange', function(event) {
-                var data = dataService.getSelectedForm();
+                var blocks = dataService.getSelectedFormBlocks();
                 var connatiner = element.find("#root");
                 connatiner.html('');
-                if (data && data.blocks) {
-                    var result = dataService.recursiveProcessModule($compile, scope, connatiner, 'root', data.blocks);
+                if (blocks) {
+                    var result = dataService.recursiveProcessModule($compile, scope, connatiner, 'root', blocks);
                     scope.addNewtask(result);
                 }
             });
@@ -41,7 +50,7 @@ app.directive("blockRoot", function ($compile, $rootScope, dataService) {
     };
 });
 
-app.directive("blockModule", function ($compile, $rootScope, dataService) {
+app.directive("blockModule", function ($compile, $rootScope, $location, $anchorScroll, dataService) {
   	return {
     	restrict: "A",
     	replace: true,
@@ -53,16 +62,19 @@ app.directive("blockModule", function ($compile, $rootScope, dataService) {
             var parentId = dataService.getBlockParentId(elementId);
             $rootScope.$broadcast('childchange:' + parentId);
 
-    		tElem.find('#collapseId').attr({
-    			id: elementId + "-collapse",
-    			ariaLabelledby: elementId + "-heading"
+            tElem.find('#header').attr({
+                'id': elementId + "-header",
+                'data-parent': '#' + parentId,
+                'data-toggle': 'collapse',
+                'aria-expanded': false,
+                'href': "#" + elementId + "-body",
+                'aria-controls': elementId + "-body"
+            });
+    		tElem.find('#body').attr({
+    			'id': elementId + "-body",
+                'aria-labelledby': elementId + "-header"
     		});
-    		tElem.find('#headingId').attr({
-    			id: elementId + "-heading",
-    			href: "#" + elementId + "-collapse",
-    			ariaControls: elementId + "-collapse",
-    			"data-parent": "#" + parentId
-    		});
+
     		tElem.find('#container').attr({
     			id: elementId
     		});
@@ -91,6 +103,7 @@ app.directive("blockModule", function ($compile, $rootScope, dataService) {
             };
 
       		return function (scope, element, attr) {
+                $anchorScroll.yOffset = 250;
                 scope.block = dataService.getModuleBlock(attr.elementId);
                 scope.protocols = dataService.getModuleProtocol();
                 scope.properties = [];
@@ -106,13 +119,12 @@ app.directive("blockModule", function ($compile, $rootScope, dataService) {
                 resetModuleItems(scope, scope.block.type);
 
                 scope.insetSlibing = function(type) {
-                    // element.children().find('.collapse').collapse('hide');
                     var insertPosition = dataService.getBlockPosition(attr.elementId);
                     var elementId = dataService.createModule($compile, scope, element, insertPosition, type, parentId);
                     $rootScope.$broadcast('insert:' + scope.ctrl.elementId, elementId);
                 };
                 scope.blockPanelClicked = function() {
-                    dataService.resetSelection(scope.ctrl.elementId);
+                    dataService.setHighlightViewId(scope.ctrl.elementId);
                 };
                 scope.getPropertyProtocolType = function(name) {
                     var type = scope.protocols[name];
@@ -135,19 +147,32 @@ app.directive("blockModule", function ($compile, $rootScope, dataService) {
                         value = -2;
                     } else if (name === 'vertical-align') {
                         value = 'top';
+                    } else if (name === 'display') {
+                        value = 'true';
+                    } else if (name === 'content') {
+                        value = 'bottomView';
                     }
 
                     scope.block[name] = value;
                     resetModuleItems(scope, scope.block.type);
+
+                    if (name === 'content') {
+                        $rootScope.$broadcast('delete:' + scope.ctrl.elementId);
+                        dataService.createView($compile, scope, element, true, scope.ctrl.elementId);
+                    }
                 };
                 scope.deleteProperty = function(name) {
                     delete scope.block[name];
                     resetModuleItems(scope, scope.block.type);
+
+                    if (name === 'content') {
+                        dataService.getBottombar().html('');
+                        $rootScope.$broadcast('append:root', scope.ctrl.elementId);
+                    }
                 };
 		      	scope.addNewChild = function(type) {
-                    element.children().find('.collapse').collapse('hide');
-		      		var container = element.find("#" + attr.elementId);
-		      		var elementId = dataService.createModule($compile, scope, container, -1, type, attr.elementId);
+		      		var container = element.find("#" + scope.ctrl.elementId);
+		      		var elementId = dataService.createModule($compile, scope, container, -1, type, scope.ctrl.elementId);
                     $rootScope.$broadcast('append:' + scope.ctrl.elementId, elementId);
                 };
                 scope.deleteElement = function() {
@@ -166,6 +191,16 @@ app.directive("blockModule", function ($compile, $rootScope, dataService) {
                         scope.ctrl.title = title;
                         scope.ctrl.childNum = childs.length;
                     }
+                });
+                scope.$on('module:close-' + scope.ctrl.elementId, function(event) {
+                    element.find('.collapse').collapse('hide');
+                });
+                scope.$on('module:open-' + scope.ctrl.elementId, function(event) {
+                    element.find('.collapse').collapse('show');
+                });
+                scope.$on('module:open-' + scope.ctrl.elementId + '-finished', function(event) {
+                    $location.hash(scope.ctrl.elementId + '-body');
+                    $anchorScroll();
                 });
 
                 if (scope.block.value) {

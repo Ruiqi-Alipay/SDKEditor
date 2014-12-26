@@ -33,8 +33,8 @@ app.directive("formProperties", function($compile, dataService) {
             scope.$on('sdk:panelSelectionChange', function(event) {
                 element.html('');
                 scope.allProperties = {};
-                scope.allProperties.form = dataService.getSelectedForm().form;
-                element.append($compile("<div properties-panel sector='form'></div>")(scope));
+                scope.allProperties['parameter'] = dataService.getSelectedFormParameters();
+                element.append($compile("<div properties-panel sector='parameter' style='margin-top: 12px;'></div>")(scope));
             });
         }
     };
@@ -48,14 +48,28 @@ app.directive("propertiesPanel", function($compile, dataService) {
     	templateUrl: "templates/properties_panel.html",
         compile: function (tElem) {
             var sector = tElem.attr("sector");
-            tElem.find('#childContainer').attr({
+            var parentId = tElem.attr("parentid");
+            tElem.find('#header').attr({
+                'id': sector + "-header",
+                'data-parent': '#' + parentId,
+                'data-toggle': 'collapse',
+                'aria-expanded': true,
+                'href': "#" + sector + "-body",
+                'aria-controls': sector + "-body"
+            });
+            tElem.find('#body').attr({
+                'id': sector + "-body",
+                'aria-labelledby': sector + "-header"
+            });
+
+            tElem.find('#container').attr({
                 id: sector
             });
 
             return function (scope, element, attr) {
-                var appendChildPanel = function(sector) {
+                var appendChildPanel = function(sector, parentId) {
                     var container = element.find('#' + scope.sector);
-                    container.append($compile("<div properties-panel sector='" + sector + "'></div>")(scope));
+                    container.append($compile("<div properties-panel sector='" + sector + "' parentid='" + parentId + "'></div>")(scope));
                 };
                 var findProperty = function(array, name) {
                     for (var index = 0; index < array.length; index++) {
@@ -78,7 +92,7 @@ app.directive("propertiesPanel", function($compile, dataService) {
                 scope.newPanelProperty = function(name) {
                     scope.properties[name] = '';
                     scope.allProperties[name] = {};
-                    appendChildPanel(name);
+                    appendChildPanel(name, sector);
                 };
                 scope.deleteProperty = function(key) {
                     delete scope.properties[key];
@@ -146,7 +160,7 @@ app.directive("propertiesPanel", function($compile, dataService) {
                     var type = scope.protocols[key];
                     if (type === 'object') {
                         scope.allProperties[key] = scope.properties[key];
-                        appendChildPanel(key);
+                        appendChildPanel(key, sector);
                     }
                 }
             };

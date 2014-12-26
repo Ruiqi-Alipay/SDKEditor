@@ -9,12 +9,34 @@ app.directive("expandableSelector", function($location, $anchorScroll, dataServi
 		link: function(scope, element, attr) {
     		$anchorScroll.yOffset = 250;
     		scope.module = dataService.getModuleBlock(attr.elementId);
-    		scope.selection = dataService.getItemSelection();
-    		scope.expand = {};
-    		scope.gap = {};
+    		scope.style = dataService.getModuleCssStyle(attr.elementId);
+    		scope.gapStyle = {};
     		scope.showDrapsown = false;
     		scope.itemModules = [];
     		scope.itemTemplates = {};
+
+            var processModule = function(style, module) {
+                dataService.moduleDataToCSS(style, module, attr.elementId);
+                if (module.value) {
+                    var childStye = {};
+                    module.value.forEach(function(value, index) {
+                        if (value.name === 'elementValues') {
+                            value.value.forEach(function(childValue, childIndex) {
+                                scope.itemModules[childIndex] = childValue;
+                                if (!('itemSelect' in scope)) {
+                                    scope.itemSelect = childIndex;
+                                }
+                            });
+                        } else if (value.name === 'topStyle' || value.name === 'childStyle') {
+                            scope.itemTemplates[value.name] = value;
+                        } else if (value.name === 'gap') {
+                            dataService.moduleDataToCSS(scope.gapStyle, value);
+                        }
+                    });
+                }
+            };
+
+            processModule(scope.style, scope.module);
 
     		scope.getModule = function(index) {
     			return scope.itemModules[index];
@@ -37,24 +59,7 @@ app.directive("expandableSelector", function($location, $anchorScroll, dataServi
     			scope.showDrapsown = !scope.showDrapsown;
     		};
     		scope.$watch('module', function(newValue, oldValue) {
-    			dataService.moduleDataToView(scope.expand, scope.module);
-	    		if (scope.module.value) {
-	    			var childStye = {};
-		    		scope.module.value.forEach(function(value, index) {
-		    			if (value.name === 'elementValues') {
-		    				value.value.forEach(function(childValue, childIndex) {
-		    					scope.itemModules[childIndex] = childValue;
-			    				if (!('itemSelect' in scope)) {
-			    					scope.itemSelect = childIndex;
-			    				}
-		    				});
-		    			} else if (value.name === 'topStyle' || value.name === 'childStyle') {
-		    				scope.itemTemplates[value.name] = value;
-		    			} else if (value.name === 'gap') {
-		    				dataService.moduleDataToView(scope.gap, value);
-		    			}
-		    		});
-	    		}
+                processModule(scope.style, newValue);
     		}, true);
     		scope.getImageView = function() {
     			return scope.topImg;
@@ -95,22 +100,36 @@ app.directive('expandableItem', function(dataService) {
                 scope.childClicked(attr.moduleIndex);
             }
     		scope.$watch('template', function(newValue, oldValue) {
-				dataService.moduleDataToView(scope.layout, newValue);
+                if (!newValue) {
+                    return;
+                }
+
+				dataService.moduleDataToCSS(scope.layout, newValue);
 				newValue.value.forEach(function(value, index) {
 					if (value.name === 'image') {
-						dataService.moduleDataToView(scope.icon, value);
+						dataService.moduleDataToCSS(scope.icon, value);
+                        scope.icon['align-self'] = 'center';
+                        scope.icon['min-width'] = scope.icon.width;
+                        scope.icon['min-height'] = scope.icon.height;
 					} else if (value.name === 'text') {
-						dataService.moduleDataToView(scope.text[0], value);
-						dataService.moduleDataToView(scope.text[1], value);
+						dataService.moduleDataToCSS(scope.text[0], value);
+						dataService.moduleDataToCSS(scope.text[1], value);
+                        scope.text[0]['align-self'] = 'center';
+                        scope.text[1]['align-self'] = 'center';
 					} else {
                         var previousImage = scope.indicator.image;
-						dataService.moduleDataToView(scope.indicator, value);
+						dataService.moduleDataToCSS(scope.indicator, value);
+                        
                         if (scope.indicator.height.indexOf('px') <= 0) {
                             scope.indicator.height = '50px';
                         }
                         if (scope.indicator.width.indexOf('px') <= 0) {
                             scope.indicator.width = '50px';
                         }
+                        scope.indicator['min-width'] = scope.indicator.width;
+                        scope.indicator['min-height'] = scope.indicator.height;
+                        scope.indicator['align-self'] = 'center';
+
                         if (scope.indicator.image) {
                             if (scope.indicator.image.indexOf(";") > 0) {
                                 scope.indicator.images = scope.indicator.image.split(";");
@@ -128,7 +147,7 @@ app.directive('expandableItem', function(dataService) {
     			scope.icon.url = newValue.url;
                 scope.text = [{}, {}];
 				newValue.value.forEach(function(value, index) {
-					dataService.moduleDataToView(scope.text[index], value);
+					dataService.moduleDataToCSS(scope.text[index], value);
 				});
     		}, true);
         }

@@ -11,7 +11,7 @@
 			  visibility: hidden;
 			}
 			.custom-file-input::before {
-			  content: '导入界面模板';
+			  content: '导入模板';
 			  display: inline-block;
 			  background: -webkit-linear-gradient(top, #f9f9f9, #e3e3e3);
 			  border: 1px solid #999;
@@ -34,7 +34,6 @@
 			.block-header {
 				height: 25px;
 				padding: 1px 1px 1px 16px;
-				background: red;
 			}
 			.block-item {
 				padding-bottom: 3px;
@@ -45,41 +44,8 @@
 			.block-item-footer {
 
 			}
-			.inbody-block {
-				padding: 16px 0px 0px 0px;
-			}
 			.input-header {
 				width: 90px;
-			}
-			.flexbox-block {
-			  list-style: none;
-			  display: -webkit-box;
-			  display: -moz-box;
-			  display: -ms-flexbox;
-			  display: -webkit-flex;
-			  display: flex;
-			  flex-direction: row;
-			  flex-wrap: wrap;
-			}
-			.flexbox-component {
-			  list-style: none;
-			  display: -webkit-box;
-			  display: -moz-box;
-			  display: -ms-flexbox;
-			  display: -webkit-flex;
-			  display: flex;
-			  flex-direction: row;
-			  flex-wrap: nowrap;
-			}
-			.flexbox-innerblock {
-			  list-style: none;
-			  display: -webkit-box;
-			  display: -moz-box;
-			  display: -ms-flexbox;
-			  display: -webkit-flex;
-			  display: flex;
-			  flex-direction: column;
-			  flex-wrap: nowrap;
 			}
 			.r-padding {
 				padding-right: 30px;
@@ -101,8 +67,7 @@
 				height: 567px;
 			}
 			.activity {
-				overflow: -moz-scrollbars-none;
-				overflow-y: auto;
+
 			}
 			.scroll {
 				overflow: -moz-scrollbars-none;
