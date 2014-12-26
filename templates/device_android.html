@@ -1,0 +1,11 @@
+<div class="device">
+	<img class="status-bar" src="res/status_bar.png">
+	<div class="screen flexbox-block">
+		<div class="action-bar" style="width: 100%; position: absolute; top: 0; left: 0;">
+			<div action-bar></div>
+		</div>
+		<div class="activity flexbox-block" ng-class="{'popup-win': activity.type==='popupwin'}" ng-style="{'align-self': activity.align, 'padding-top': activity.paddingTop, 'align-content': 'flex-start', 'width': activity.width, 'height': activity.height, 'background': activity.background}"></div>
+		<div class="bottom-bar" style="width: 100%; position: absolute; bottom: 0; left: 0;"></div>
+	</div>
+	<img class="navigation-bar" src="res/navigation_bar.png">
+</div>

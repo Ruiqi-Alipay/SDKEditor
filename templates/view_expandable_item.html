@@ -1,0 +1,14 @@
+  <div ng-click="itemClicked()" class="flexbox-component list-button" style="align-content: flex-start" ng-style="{'width': layout.width, 'height': layout.height, 'align-self': layout.verticalAlign, 'padding-top': layout.paddingTop, 'padding-right': layout.paddingRight, 'padding-bottom': layout.paddingBottom, 'padding-left': layout.paddingLeft, 'margin-top': layout.marginTop, 'margin-right': layout.marginRight, 'margin-bottom': layout.marginBottom, 'margin-left': layout.marginLeft, 'background': layout.background, 'border-radius': layout.borderRadius}">
+	<img ng-src="{{'res/'+icon.url.replace(':', '-')+'.png'}}" ng-style="{'min-width': icon.width, 'min-height': icon.height, 'max-width': icon.width, 'max-height': icon.height, 'align-self': icon.verticalAlign, 'padding-top': icon.paddingTop, 'padding-right': icon.paddingRight, 'padding-bottom': icon.paddingBottom, 'padding-left': icon.paddingLeft, 'margin-top': icon.marginTop, 'margin-right': icon.marginRight, 'margin-bottom': icon.marginBottom, 'margin-left': icon.marginLeft, 'background': icon.background}">
+	<div style="flexbox-innerblock" ng-style="{'align-self': text[0].verticalAlign, 'width': text[0].width, 'height': text[0].height, 'padding-top': text[0].paddingTop, 'padding-right': text[0].paddingRight, 'padding-bottom': text[0].paddingBottom, 'padding-left': text[0].paddingLeft, 'margin-top': text[0].marginTop, 'margin-right': text[0].marginRight, 'margin-bottom': text[0].marginBottom, 'margin-left': text[0].marginLeft}">
+		<div ng-style="{'align-self': text[0].align}">
+			{{text[0].text}}
+		</div>
+	</div>
+	<div ng-show="text[1].text" class="flexbox-innerblock" ng-style="{'align-self': text[1].verticalAlign, 'width': text[1].width, 'height': text[1].height, 'padding-top': text[1].paddingTop, 'padding-right': text[1].paddingRight, 'padding-bottom': text[1].paddingBottom, 'padding-left': text[1].paddingLeft, 'margin-top': text[1].marginTop, 'margin-right': text[1].marginRight, 'margin-bottom': text[1].marginBottom, 'margin-left': text[1].marginLeft}">
+		<div ng-style="{'align-self': text[1].align}">
+			{{text[1].text}}
+		</div>
+	</div>
+	<img ng-src="{{'res/'+indicator.image.replace(':', '-')+'.png'}}" ng-style="{'min-width': indicator.width, 'min-height': indicator.height, 'align-self': indicator.verticalAlign, 'padding-top': indicator.paddingTop, 'padding-right': indicator.paddingRight, 'padding-bottom': indicator.paddingBottom, 'padding-left': indicator.paddingLeft, 'margin-top': indicator.marginTop, 'margin-right': indicator.marginRight, 'margin-bottom': indicator.marginBottom, 'margin-left': indicator.marginLeft, 'background': indicator.background}">
+  </div>

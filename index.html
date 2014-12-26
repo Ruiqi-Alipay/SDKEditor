@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html ng-app="sdkApp">
+	<head>
+		<meta charset="utf-8">
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="css/colorpicker.css">
+		<link rel="stylesheet" href="css/main.css">
+
+		<script src="bower_components/jquery/dist/jquery.js"></script>
+		<script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+		<script src="bower_components/angular/angular.js"></script>
+		<script src="js/main.js"></script>
+		<script src="js/services/main_services.js"></script>
+		<script src="js/directives/bootstrap-colorpicker-module.js"></script>
+		<script src="js/directives/module_directives.js"></script>
+		<script src="js/directives/parameters_directives.js"></script>
+		<script src="js/directives/mobile_device.js"></script>
+		<script src="js/directives/simple_view.js"></script>
+		<script src="js/directives/expandable_selector.js"></script>
+		<title>收银台SDK模板编辑器</title>
+	</head>
+	<body ng-controller="mainController">
+		<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		  <div class="container-fluid">
+		    <!-- Brand and toggle get grouped for better mobile display -->
+		    <div class="navbar-header">
+		      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+		        <span class="sr-only">Toggle navigation</span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </button>
+		      <a class="navbar-brand" href="#">SDK模板编辑器</a>
+		    </div>
+
+		    <!-- Collect the nav links, forms, and other content for toggling -->
+		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		      <ul class="nav navbar-nav" ng-init="appState.tabSelect=1">
+				   <li ng-click="appState.tabSelect=1"
+			        		ng-class="{'active' : appState.tabSelect==1}"><a>基本配置</a></li>
+			       <li ng-click="appState.tabSelect=2;onMainFormSelected();"
+			        		ng-class="{'active' : appState.tabSelect==2}"><a>主表单</a></li>
+			       <li ng-class="{'active' : appState.tabSelect==3}" class="dropdown">
+			          <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Actions<span class="caret"></span></a>
+			          <ul class="dropdown-menu" role="menu">
+			            <li ng-repeat="action in actionList"><a ng-click="appState.tabSelect=3;onActionSelected($index);">{{action.name}}</a></li>
+			            <li class="divider"></li>
+			            <li><a ng-click="appState.tabSelect=3;onNewAction();">New action</a></li>
+			          </ul>
+			        </li>
+		      </ul>
+		      <ul class="nav navbar-nav navbar-right r-padding">
+		      	<li><input style="padding-top: 10px;" type='file' class="custom-file-input" accept='.json' onchange="angular.element(this).scope().loadScript(this)"/></li>
+		      	<li><button ng-disabled="scriptForm.$invalid" type="button" class="btn btn-default bt-sm navbar-btn" ng-click="downloadScript()">下载模板</button></li>
+		      </ul>
+		    </div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+		</nav>
+
+		<div class="row">
+
+			<div class="col-md-8 col-md-offset-2 scroll" style="padding-bottom: 300px;" ng-show="appState.tabSelect==1">
+				<div basic-properties></div>
+			</div>
+
+			<div ng-show="appState.tabSelect==2 || appState.tabSelect==3">
+
+				<div class="col-md-6 col-md-offset-1 scroll" style="padding-bottom: 300px;">
+					<ul class="nav nav-pills nav-justified" ng-init="appState.formTap=1">
+						<li role="presentation" ng-class="{active: appState.formTap==1}"><a ng-click="appState.formTap=1">基本配置</a></li>
+						<li role="presentation" ng-class="{active: appState.formTap==2}"><a ng-click="appState.formTap=2">blocks</a></li>
+					</ul>
+					<div form-properties ng-show="appState.formTap==1"></div>
+					<div block-root ng-show="appState.formTap==2"></div>
+				</div>
+				<div class="col-md-4">
+					<div device-android style="position: fixed"></div>
+				</div>
+
+			</div>
+
+		</div>
+	</body>
+</html>

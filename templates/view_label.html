@@ -1,0 +1,5 @@
+<div class="flexbox-innerblock" ng-click="viewClicked();$event.stopPropagation()" ng-style="{'border': viewData.border, 'align-self': viewData.verticalAlign, 'width': viewData.horWidth, 'height': viewData.height, 'padding-top': viewData.paddingTop, 'padding-right': viewData.paddingRight, 'padding-bottom': viewData.paddingBottom, 'padding-left': viewData.paddingLeft, 'margin-top': viewData.marginTop, 'margin-right': viewData.marginRight, 'margin-bottom': viewData.marginBottom, 'margin-left': viewData.marginLeft}">
+	<span ng-style="{'height': viewData.height, 'align-self': viewData.align, 'font-size': viewData.size, 'color': viewData.color}">
+		{{viewData.text}}
+	</span>
+</div>

@@ -1,0 +1,66 @@
+<div class="panel panel-default" ng-style="{'background': ctrl.background}">
+    <div class="panel-heading block-header" role="tab" id="headingId" data-toggle="collapse"
+        data-parent="#accordion" href="#collapseId" aria-expanded="true" aria-controls="collapseId" ng-click="blockPanelClicked()">
+      <p class="panel-title"><a ><strong>{{block.type || block.name}}</strong>{{ctrl.title}} <span ng-show="block.type=='block' || block.type=='component'" class="badge">{{ctrl.childNum}}</span></a></p>
+    </div>
+    <div id="collapseId" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingId">
+      <div class="panel-body">
+        <div class="row" style="padding: 0px 14px 14px 14px">
+          <div class="btn-group btn-group-sm pull-right">
+            <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-expanded="false" ng-class="{'btn-primary': ctrl.background=='#428bca', 'btn-success': ctrl.background=='#5cb85c', 'btn-info': ctrl.background=='#5bc0de', 'btn-warning': ctrl.background=='#f0ad4e', 'btn-danger': ctrl.background=='#d9534f'}">
+                  Insert sibling<span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li role="presentation" class="dropdown-header">Choose new child type</li>
+              <li ng-repeat="type in ctrl.typeArray"><a ng-click="insetSlibing(type)">{{type}}</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="row block-item">
+          <div class="col-sm-6 block-item" ng-repeat="property in properties">
+              <div class="input-group">
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">{{property}} <span class="caret"></span></button>
+                  <ul class="dropdown-menu" role="menu">
+                    <li role="presentation" class="dropdown-header">Click to delete '{{property}}'</li>
+                    <li><a ng-click="deleteProperty(property)">Delete</a></li>
+                  </ul>
+                </div>
+                <span ng-switch on="getPropertyProtocolType(property)">
+                  <input ng-switch-when="color" type="text" name="value" class="form-control" colorpicker="rgb" ng-model="block[property]">
+                  <select ng-switch-when="array" class="form-control form-control-sm" ng-model="block[property]">
+                    <option ng-repeat="item in getPropertyProtocolValue(key)">{{item}}</option>
+                  </select>
+                  <input ng-switch-default type="text" name="value" class="form-control" ng-model="block[property]">
+                </span>
+              </div>
+          </div>
+          <div class="col-sm-6 block-item" ng-show="ctrl.unuse">
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                Add property <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu">
+                <li role="presentation" class="dropdown-header">Click property name to add</li>
+                <li ng-repeat="name in ctrl.unuse"><a ng-click="addNewProperty(name)">{{name}}</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div id="container" class="panel-group inbody-block" role="tablist" aria-multiselectable="true">
+        </div>
+        <div class="row" style="padding: 0px 14px 0px 14px">
+          <button type="button" class="btn btn-sm btn-danger" ng-click="deleteElement()">Delete</button>
+          <div class="btn-group btn-group-sm pull-right">
+            <button type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-expanded="false" ng-class="{'btn-primary': ctrl.background=='#428bca', 'btn-success': ctrl.background=='#5cb85c', 'btn-info': ctrl.background=='#5bc0de', 'btn-warning': ctrl.background=='#f0ad4e', 'btn-danger': ctrl.background=='#d9534f'}">
+                  Add Child <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li role="presentation" class="dropdown-header">Choose new child type</li>
+              <li ng-repeat="type in ctrl.typeArray"><a ng-click="addNewChild(type)">{{type}}</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
