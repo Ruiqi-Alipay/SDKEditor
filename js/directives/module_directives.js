@@ -203,7 +203,7 @@ app.directive("blockModule", function ($compile, $rootScope, $location, $anchorS
                     $anchorScroll();
                 });
 
-                if (scope.block.value) {
+                if (scope.block.value instanceof Array && scope.block.value) {
                     var container = element.find("#" + scope.ctrl.elementId);
                     var result = dataService.recursiveProcessModule($compile, scope, container, scope.ctrl.elementId, scope.block.value);
                     scope.addNewtask(result);

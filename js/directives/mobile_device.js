@@ -47,7 +47,8 @@ app.directive("deviceAndroid", function($compile, $rootScope, dataService) {
                     scope.style['margin'] = 'auto auto';
                     scope.style['padding-top'] = '0px';
                 } else {
-                    scope.style['width'] = '100%';
+                    scope.style['width'] = '360px';
+                    scope.style['max-width'] = '360px';
                     scope.style['height'] = '';
                     scope.style['background'] = '#eee';
                     scope.style['border-radius'] = '';
@@ -55,6 +56,7 @@ app.directive("deviceAndroid", function($compile, $rootScope, dataService) {
                     scope.style['-webkit-box-shadow'] = '';
                     scope.style['box-shadow'] = '';
                     scope.style['margin'] = '';
+                    scope.style['padding-bottom'] = '58px';
                     if (newValue.form.actionBar) {
                         scope.style['padding-top'] = '48px';
                     } else {

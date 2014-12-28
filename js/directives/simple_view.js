@@ -17,6 +17,10 @@ app.directive("itemView", function($compile, dataService) {
 				return "templates/view_component.html";
 			} else if (data.type === 'password' || data.type === 'input') {
                 return "templates/view_input.html"
+            } else if (data.type === 'spassword') {
+                return "templates/view_spassword.html"
+            } else if (data.type === 'checkbox') {
+                return "templates/view_checkbox.html"
             } else {
 				return "templates/view_block.html";
 			}

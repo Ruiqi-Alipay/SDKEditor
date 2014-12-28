@@ -1,6 +1,7 @@
 var app = angular.module("sdkApp");
 
 app.factory("dataService", function($rootScope, $timeout) {
+	var dpiRatio = 2 / 3;
 	var generateUuid = function() {
     	return (((1+Math.random())*0x10000)|0).toString(16).substring(1); 
 	};
@@ -157,7 +158,9 @@ app.factory("dataService", function($rootScope, $timeout) {
 		var directive = 'item-view';
 	    if (block.type === 'expandableSelector') {
 	    	directive = 'expandable-selector';
-	    } 
+	    }  else if (block.type === 'combox') {
+	    	directive = 'combox-selector';
+	    }
 		var element = compile("<div " + directive + " element-id='" + elementId + "'></div>")(scope);
 		var module = moduleMap[elementId];
 		if (module.content === 'bottomView') {
@@ -224,7 +227,17 @@ app.factory("dataService", function($rootScope, $timeout) {
 				}
 			}
 		};
-
+	function parseImage (imageCode) {
+		if (imageCode === 'local:middle_line') {
+			return '#C0C0C0';
+		} else if (imageCode === 'local:normal;local:hover;local:disable') {
+			return 'rgb(214,15,15)';
+		} else if (imageCode === 'local:normal_second;local:hover_second;local:disable_second') {
+			return 'rgb(255, 255, 255)';
+		} else {
+			return imageCode;
+		}
+	}
 	var hierarchyColor = ['#428bca', '#5cb85c', '#5bc0de', '#f0ad4e', '#d9534f',
 							'#428bca', '#5cb85c', '#5bc0de', '#f0ad4e', '#d9534f'];
 	var defProtocol = {
@@ -274,13 +287,13 @@ app.factory("dataService", function($rootScope, $timeout) {
 			type: ['fullscreen', 'popupwin']
 		},
 		blocks: {
-			type: ["block", "component", "button", "label", "img", "icon", "link", "line", "expandableSelector"],
+			type: ["block", "component", "button", "checkbox", "label", "img", "icon", "link", "line", "expandableSelector", "spassword"],
 			block: ['width','height', 'align', 'vertical-align', 'margin', 'padding',
 						'image', 'filter', 'css', 'display', 'content'],
 			component: ['width','height', 'align', 'vertical-align', 'margin', 'padding',
 						'image', 'filter', 'css', 'display', 'content'],
 			button: ['action', 'width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
-						'image', 'text', 'filter', 'css', 'display'],
+						'image', 'text', 'filter', 'css', 'display', 'submit', 'checkInput'],
 			label: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
 						'image', 'text', 'text-align', 'filter', 'html', 'underline', 'css', 'display'],
 			img: ['width','height', 'src', 'align', 'vertical-align', 'margin', 'padding', 'color',
@@ -293,10 +306,14 @@ app.factory("dataService", function($rootScope, $timeout) {
 						'image', 'text', 'text-align', 'filter', 'html', 'underline', 'css', 'display'],
 			input: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'display', 'imeAct',
 						'hint', 'empty_msg', 'keyboard'],
+			checkbox: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'display',
+						'format_msg', 'must'],
 			password: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'display', 'imeAct',
 						'hint', 'empty_msg', 'keyboard'],
 			expandableSelector: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
 						'image', 'text', 'text-align', 'filter', 'html', 'underline', 'css', 'display'],
+			spassword: ['width','height', 'align', 'vertical-align', 'margin', 'padding',
+						'css', 'display', 'cursor', 'auto', 'keyboard', 'action']
 		},
 		actionBar: {
 			title: 'text'
@@ -335,10 +352,16 @@ app.factory("dataService", function($rootScope, $timeout) {
 		display: ['true', 'false'],
 		content: ['bottomView'],
 		action: 'text',
-		imeAct: ['next'],
+		imeAct: ['next', 'done'],
 		hint: 'text',
 		empty_msg: 'text',
-		keyboard: ['en', 'cn']
+		keyboard: ['en', 'cn', 'num'],
+		auto: ['true', 'false'],
+		cursor: ['true', 'false'],
+		must: ['true', 'false'],
+		format_msg: 'text',
+		submit: ['true', 'false'],
+		checkInput: ['true', 'false']
 	};
 
 	var actionList = [];
@@ -487,7 +510,18 @@ app.factory("dataService", function($rootScope, $timeout) {
 		moduleDataToCSS: function(style, module, elementId) {
 				var width = this.processWidth(module.width, module.type);
 				var height = this.processHeight(module.height, module.type);
-				style['font-size'] = module.size * 2 / 3;
+				var margin = this.processPadding(module.margin);
+	            style['margin-top'] = margin[0];
+	            style['margin-left'] = margin[1];
+	            style['margin-bottom']  = margin[2];
+	            style['margin-right'] = margin[3];
+	            if (width.indexOf('%') > 0) {
+	            	var marginLR = parseInt(margin[1].slice(0, margin[1].indexOf('px')))
+	            			+ parseInt(margin[3].slice(0, margin[3].indexOf('px')));
+	            	width = 'calc(' + width + ' - ' + marginLR + 'px)';
+	            }
+
+				style['font-size'] = module.size * dpiRatio;
 				style['width'] = width;
 				style['height'] = height;
 				style['max-width'] = width;
@@ -512,16 +546,28 @@ app.factory("dataService", function($rootScope, $timeout) {
 						parentStyle['justify-content'] = hvAlign[1];
 					} else if (parentModule.type === 'component') {
 						style['align-self'] = hvAlign[1];
-						parentStyle['justify-content'] = hvAlign[0]
+						if ((parentStyle['justify-content'] === 'space-between') || (parentStyle['justify-content'] === 'flex-start' && hvAlign[0] === 'flex-end')
+							|| (parentStyle['justify-content'] === 'flex-end' && hvAlign[0] === 'flex-start')) {
+							parentStyle['justify-content'] = 'space-between';
+						} else {
+							parentStyle['justify-content'] = hvAlign[0];
+						}
 					}
 					style['text-align'] = module['text-align'];
 				}
 				
 				if (module.html === 'true' && module.text) {
-					element.html(module.text);
+					// element.html(module.text);
 				}
 
-				style['background'] = module.image;
+				if (module.type === 'block' || module.type === 'component'
+						|| module.type === 'line' || module.type === 'button') {
+					if (module.image) {
+						style['background'] = parseImage(module.image);	
+					} else if (module.color) {
+						style['background'] = module.color;
+					}
+				}
 				style['color'] = module.color;
 
 				var padding = this.processPadding(module.padding);
@@ -530,15 +576,24 @@ app.factory("dataService", function($rootScope, $timeout) {
 	            style['padding-bottom']  = padding[2];
 	            style['padding-right']  = padding[3];
 
-				var margin = this.processPadding(module.margin);
-	            style['margin-top'] = margin[0];
-	            style['margin-left'] = margin[1];
-	            style['margin-bottom']  = margin[2];
-	            style['margin-right'] = margin[3];
+	            if ((module.type === 'input' || module.type === 'password') && style['padding-left'] === '0px') {
+	            	style['padding-left'] = '8px';
+	            } else if (module.type === 'button') {
+	            	if (style['padding-top'] === '0px') {
+	            		style['padding-top'] = '8px';
+	            	}
+	            	if (style['padding-bottom'] === '0px') {
+	            		style['padding-bottom'] = '8px';
+	            	}
+	            }
 
 	            var filterMap = this.processFilter(module.filter);
 	            if ('corner' in filterMap) {
 	            	style['border-radius'] = filterMap['corner'];
+	            }
+
+	            if (module.hint) {
+	            	style['placeholder'] = module.hint;
 	            }
 		},
 		processFilter: function(filter) {
@@ -550,7 +605,7 @@ app.factory("dataService", function($rootScope, $timeout) {
 	                    var filterName = filter.slice(0, start);
 	                    var filterValue = filter.slice(start + 1, end);
 	                    if (filterName === 'corner') {
-	                    	result[filterName] = filterValue + 'px';
+	                    	result[filterName] = filterValue * dpiRatio + 'px';
 	                    }
 	                }
 	            }
@@ -609,16 +664,16 @@ app.factory("dataService", function($rootScope, $timeout) {
 							if (pxIndex > 0) {
 								width = width.slice(0, pxIndex);
 							}
-							return width * 2 / 3 +'px';
+							return width * dpiRatio +'px';
 						} else {
 							return width;
 						}
 					}
             	} else {
-            		if (moduleType === 'img' || moduleType === 'icon') {
-            			return '';
-            		} else {
+            		if (moduleType === 'block' || moduleType === 'component' || moduleType === 'button') {
             			return '100%';
+            		} else {
+            			return '';
             		}
             	}
 		},
@@ -635,7 +690,7 @@ app.factory("dataService", function($rootScope, $timeout) {
 							if (pxIndex > 0) {
 								height = height.slice(0, pxIndex);
 							}
-							return height * 2 / 3 +'px';
+							return height * dpiRatio +'px';
 						} else {
 							return height;
 						}
@@ -725,7 +780,9 @@ app.factory("dataService", function($rootScope, $timeout) {
 		getModuleCssStyle: function(elementId) {
 			var style = moduleStyleMap[elementId];
 			if (!style) {
-				style = {};
+				style = {
+					'box-sizing': 'border-box'
+				};
 				moduleStyleMap[elementId] = style;
 			}
 			return style;
