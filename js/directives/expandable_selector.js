@@ -105,6 +105,7 @@ app.directive('expandableItem', function(dataService) {
                 }
 
 				dataService.moduleDataToCSS(scope.layout, newValue);
+                scope.layout['justify-content'] = 'space-between';
 				newValue.value.forEach(function(value, index) {
 					if (value.name === 'image') {
 						dataService.moduleDataToCSS(scope.icon, value);
@@ -121,30 +122,34 @@ app.directive('expandableItem', function(dataService) {
 						dataService.moduleDataToCSS(scope.indicator, value);
                         
                         if (scope.indicator.height.indexOf('px') <= 0) {
-                            scope.indicator.height = '50px';
+                            scope.indicator.height = '20px';
                         }
                         if (scope.indicator.width.indexOf('px') <= 0) {
-                            scope.indicator.width = '50px';
+                            scope.indicator.width = '20px';
                         }
                         scope.indicator['min-width'] = scope.indicator.width;
                         scope.indicator['min-height'] = scope.indicator.height;
                         scope.indicator['align-self'] = 'center';
 
-                        if (scope.indicator.image) {
-                            if (scope.indicator.image.indexOf(";") > 0) {
-                                scope.indicator.images = scope.indicator.image.split(";");
-                                if (previousImage) {
-                                    scope.indicator.image = previousImage;
-                                } else {
-                                    scope.indicator.image = scope.indicator.images[1];
+                        if (attr.itemType === 'topStyle') {
+                            if (scope.indicator.image) {
+                                if (scope.indicator.image.indexOf(";") > 0) {
+                                    scope.indicator.images = scope.indicator.image.split(";");
+                                    if (previousImage) {
+                                        scope.indicator.src = previousImage;
+                                    } else {
+                                        scope.indicator.src = 'res/' + scope.indicator.images[1].slice(6) + '.png';
+                                    }
                                 }
                             }
+                        } else {
+                            scope.indicator.src = 'res/radio_button_normal.png';
                         }
 					}
 				});
     		}, true);
     		scope.$watch('module', function(newValue, oldValue) {
-    			scope.icon.url = newValue.url;
+    			scope.icon.src = 'res/' + newValue.url.slice(6) + '.png';
                 scope.text = [{}, {}];
 				newValue.value.forEach(function(value, index) {
 					dataService.moduleDataToCSS(scope.text[index], value);

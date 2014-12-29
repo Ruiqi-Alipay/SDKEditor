@@ -227,13 +227,17 @@ app.factory("dataService", function($rootScope, $timeout) {
 				}
 			}
 		};
-	function parseImage (imageCode) {
+	function parseBackground (imageCode) {
 		if (imageCode === 'local:middle_line') {
 			return '#C0C0C0';
 		} else if (imageCode === 'local:normal;local:hover;local:disable') {
 			return 'rgb(214,15,15)';
+		} else if (imageCode === 'local:normal;local:disable;local:hover') {
+			return 'rgb(163, 163, 163)';
 		} else if (imageCode === 'local:normal_second;local:hover_second;local:disable_second') {
 			return 'rgb(255, 255, 255)';
+		} else if (imageCode.slice(0, 6) === 'local:') {
+			return 'url(res/' + imageCode.slice(6) + '.png) no-repeat';
 		} else {
 			return imageCode;
 		}
@@ -563,12 +567,23 @@ app.factory("dataService", function($rootScope, $timeout) {
 				if (module.type === 'block' || module.type === 'component'
 						|| module.type === 'line' || module.type === 'button') {
 					if (module.image) {
-						style['background'] = parseImage(module.image);	
+						style['background'] = parseBackground(module.image);	
 					} else if (module.color) {
 						style['background'] = module.color;
 					}
+				} else if (module.type === 'img' || module.type === 'icon') {
+					if (module.image) {
+						if (module.image.slice(0, 6) === 'local:') {
+							style['src'] = 'res/' + module.image.slice(6) + '.png';
+						} else {
+							style['src'] = module.image;
+						}
+					}
 				}
 				style['color'] = module.color;
+				if (module.type === 'label' && !(module.color)) {
+					style['color'] = "rgb(0, 0, 0)";
+				}
 
 				var padding = this.processPadding(module.padding);
 	            style['padding-top'] = padding[0];
