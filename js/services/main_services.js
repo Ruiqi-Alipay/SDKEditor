@@ -192,7 +192,7 @@ app.factory("dataService", function($rootScope, $timeout) {
 					}
 				}
 
-				if ('action' in script) {
+				if ('action' in script && script['action'] instanceof Object) {
 					var actionName = script.action.name;
 					delete script.action;
 					script.action = actionName;
@@ -213,6 +213,9 @@ app.factory("dataService", function($rootScope, $timeout) {
 
 					if (key === 'action') {
 						var ss = 'sss';
+						if (ss != key) {
+							var f = parseInt(1);
+						}
 					}
 
 					if (typeof content === 'object' || content instanceof Array) {
@@ -320,7 +323,8 @@ app.factory("dataService", function($rootScope, $timeout) {
 						'css', 'display', 'cursor', 'auto', 'keyboard', 'action']
 		},
 		actionBar: {
-			title: 'text'
+			title: 'text',
+			left: 'text'
 		},
 		onback: {
 			allowBack: ['true', 'false'],
@@ -400,7 +404,7 @@ app.factory("dataService", function($rootScope, $timeout) {
 			var script = {};
 			jQuery.extend(script, scriptRoot);
 			script.form = {};
-			jQuery.extend(script.form, mainForm.form);
+			jQuery.extend(script.form, mainForm.parameter.form);
 			script.form.blocks = [];
 			for (var index in mainForm.blocks) {
 				script.form.blocks[index] = {};
@@ -408,8 +412,14 @@ app.factory("dataService", function($rootScope, $timeout) {
 			}
 
 			for (var index in actionList) {
-				assenbleAction(actionList[index], script.form.blocks);
+				var actionCopy = {};
+				jQuery.extend(actionCopy, actionList[index].parameter);
+				if (actionList[index].blocks) {
+					actionCopy.form.blocks = actionList[index].blocks;
+				}
+				assenbleAction(actionCopy, script.form.blocks);
 			}
+
 			return script;
 		},
 		createNewAction: function() {
