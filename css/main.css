@@ -7,6 +7,9 @@
 				padding-top: 70px;
 				overflow-x: hidden;
 			}
+			a {
+    			text-decoration: underline;
+			}
 			.custom-file-input::-webkit-file-upload-button {
 			  visibility: hidden;
 			}

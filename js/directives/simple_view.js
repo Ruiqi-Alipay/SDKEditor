@@ -9,9 +9,11 @@ app.directive("itemView", function($compile, dataService) {
             var data = dataService.getModuleBlock(tAttrs.elementId);
 			if (data.type === "button") {
 				return "templates/view_button.html";
-			} else if (data.type === "label" || data.type === "link") {
+			} else if (data.type === "label") {
 				return "templates/view_label.html";
-			} else if (data.type === "img" || data.type === 'icon') {
+			} else if (data.type === "link") {
+                return "templates/view_link.html";
+            } else if (data.type === "img" || data.type === 'icon') {
 				return "templates/view_img.html";
 			} else if (data.type === "component"){
 				return "templates/view_component.html";
