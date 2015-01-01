@@ -29,18 +29,26 @@ app.directive("formProperties", function($compile, dataService) {
         scope: true,
         template: "<div></div>",
         link: function(scope, element, attr) {
-            scope.allProperties = {};
-            scope.$on('sdk:panelSelectionChange', function(event) {
+            var resetPropertyies = function() {
                 element.html('');
                 scope.allProperties = {};
                 scope.allProperties['parameter'] = dataService.getSelectedFormParameters();
                 element.append($compile("<div properties-panel sector='parameter' style='margin-top: 12px;'></div>")(scope));
+            };
+
+            scope.allProperties = {};
+            scope.$on('sdk:panelSelectionChange', function(event) {
+                resetPropertyies();
+            });
+
+            scope.$on('sdk:newScriptLoaded', function(event) {
+                resetPropertyies();
             });
         }
     };
 });
 
-app.directive("propertiesPanel", function($compile, dataService) {
+app.directive("propertiesPanel", function($compile, $rootScope, dataService) {
   	return {
     	restrict: "A",
     	replace: true,
@@ -90,9 +98,12 @@ app.directive("propertiesPanel", function($compile, dataService) {
                     scope.properties[name] = '';
                 };
                 scope.newPanelProperty = function(name) {
-                    scope.properties[name] = '';
-                    scope.allProperties[name] = {};
+                    scope.properties[name] = {};
+                    scope.allProperties[name] = scope.properties[name];
                     appendChildPanel(name, sector);
+                    if (name === 'actionBar') {
+                        $rootScope.$broadcast('sdk:actionBarChange');
+                    }
                 };
                 scope.deleteProperty = function(key) {
                     delete scope.properties[key];
@@ -108,7 +119,11 @@ app.directive("propertiesPanel", function($compile, dataService) {
                             }
                         }
                     }
-                    element.remove(); 
+                    element.remove();
+
+                    if (scope.sector === 'actionBar') {
+                        $rootScope.$broadcast('sdk:actionBarChange');
+                    }
                 };
                 scope.getPropertyProtocolType = function(name) {
                     var type = scope.protocols[name];

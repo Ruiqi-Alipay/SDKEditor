@@ -9,47 +9,67 @@ router.get('/', function(req, res) {
 module.exports = router;
 
 var mongoose = require('mongoose');
-var Post = mongoose.model('Post');
-var Comment = mongoose.model('Comment');
+var Script = mongoose.model('Script');
 
-router.get('/posts', function(req, res, next) {
-  Post.find(function(err, posts){
+router.get('/api/scripts', function(req, res, next) {
+  Script.find(function(err, scripts){
     if(err){ return next(err); }
 
-    res.json(posts);
+    res.json(scripts);
   });
 });
 
-router.post('/posts', function(req, res, next) {
-  var post = new Post(req.body);
+router.post('/api/scripts', function(req, res, next) {
+  if (req.body._id) {
+    var query = Script.findById(req.body._id);
+    query.exec(function (err, script){
+      if (err) { return next(err); }
+      if (!script) { return next(new Error("can't find script")); }
+      script.content = req.body.content;
+      script.title = req.body.title;
 
-  post.save(function(err, post){
-    if(err){ return next(err); }
-
-    res.json(post);
-  });
+      script.save(function(err, script){
+        if(err){ return next(err); }
+        res.json(script);
+      });
+    });
+  } else {
+    var script = new Script(req.body);
+    script.save(function(err, script){
+      if(err){ return next(err); }
+      res.json(script);
+    });
+  }
 });
 
-router.param('post', function(req, res, next, id) {
-  var query = Post.findById(id);
+router.param('script', function(req, res, next, id) {
+  var query = Script.findById(id);
 
-  query.exec(function (err, post){
+  query.exec(function (err, script){
     if (err) { return next(err); }
-    if (!post) { return next(new Error("can't find post")); }
+    if (!script) { return next(new Error("can't find script")); }
 
-    req.post = post;
+    req.script = script;
     return next();
   });
 });
 
-router.get('/posts/:post', function(req, res) {
-  res.json(req.post);
+router.get('/api/scripts/:script', function(req, res) {
+  res.json(req.script);
 });
 
-router.put('/posts/:post/upvote', function(req, res, next) {
-  req.post.upvote(function(err, post){
+router.put('/api/scripts/:script/download', function(req, res, next) {
+  req.script.download(function(err, script){
     if (err) { return next(err); }
 
-    res.json(post);
+    res.json(script);
+  });
+});
+
+router.delete('/api/scripts/:script', function(req, res) {
+  req.script.remove(function(err, script){
+    if (err) { return next(err); }
+
+    res.json(script);
   });
 });

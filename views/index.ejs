@@ -25,7 +25,7 @@
     <script src="javascripts/directives/combox_selector.js"></script>
     <title>收银台SDK模板编辑器</title>
   </head>
-  <body ng-controller="mainController">
+  <body id="navBar" ng-controller="mainController">
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container-fluid">
         <!-- Brand and toggle get grouped for better mobile display -->
@@ -56,39 +56,59 @@
               </li>
           </ul>
           <ul class="nav navbar-nav navbar-right r-padding">
-            <li><input style="padding-top: 10px;" type='file' class="custom-file-input" accept='.json' onchange="angular.element(this).scope().loadScript(this)"/></li>
-            <li><button ng-disabled="scriptForm.$invalid" type="button" class="btn btn-default bt-sm navbar-btn" ng-click="downloadScript()">导出模板</button></li>
+            <li style="padding-right: 10px;">
+              <button ng-show="selectServerScript" type="button" class="btn btn-danger bt-sm navbar-btn" ng-click="deleteScript()">删除模板</button>
+            </li>
+            <li style="padding-right: 10px;">
+              <div class="btn-group">
+                <button type="button" class="btn btn-info dropdown-toggle navbar-btn" data-toggle="dropdown" aria-expanded="false">
+                  导入模板 <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                  <li role="presentation" class="dropdown-header">服务器脚本</li>
+                  <li ng-repeat="item in scripts"><a ng-click="loadFromServer($index)">{{item.title}}</a></li>
+                  <li class="divider"></li>
+                  <li><a ng-click="loadFromLocal()">从本地导入</a></li>
+                  <li class="divider"></li>
+                  <li><a ng-click="newFrom()">新建</a></li>
+                </ul>
+              </div>
+            </li>
+            <li style="padding-right: 10px;">
+              <button ng-disabled="scriptForm.$invalid" type="button" class="btn btn-success bt-sm navbar-btn" ng-click="saveScript()">保存模板</button>
+            </li>
+            <li sytle="padding-right: 10px;">
+              <button ng-disabled="scriptForm.$invalid" type="button" class="btn btn-primary bt-sm navbar-btn" ng-click="downloadScript()">导出模板</button>
+            </li>
           </ul>
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
     </nav>
 
-    <div class="modal fade" id="newAction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="myModalLabel">New action</h4>
-          </div>
-          <div class="modal-body">
-            <input type="text" class="form-control" placeholder="Enter acton name">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary">Create</button>
-          </div>
+    <div id="postDialog" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog"
+        aria-labelledby="mySmallModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content" style="padding: 20px;">
+          {{message}}
         </div>
       </div>
     </div>
 
     <div class="row">
 
-      <div class="col-md-8 col-md-offset-2 scroll" style="padding-bottom: 300px;" ng-show="appState.tabSelect==1">
+      <div class="col-sm-8 col-sm-offset-2 scroll" style="padding-bottom: 300px;" ng-show="appState.tabSelect==1">
+        <div class="row" style="padding-bottom: 20px;">
+          <div class="input-group col-sm-6">
+            <span class="input-group-addon" id="script-name">脚本名称</span>
+            <input type="text" class="form-control" aria-describedby="script-name" ng-model="scriptName">
+          </div>
+        </div>
         <div basic-properties></div>
       </div>
 
       <div ng-show="appState.tabSelect==2 || appState.tabSelect==3">
 
-        <div class="col-md-6 col-md-offset-1 scroll" style="padding-bottom: 300px;">
+        <div class="col-sm-6 col-sm-offset-1 scroll" style="padding-bottom: 300px;">
           <ul class="nav nav-pills nav-justified" ng-init="appState.formTap=1">
             <li role="presentation" ng-class="{active: appState.formTap==1}"><a ng-click="appState.formTap=1">基本配置</a></li>
             <li role="presentation" ng-class="{active: appState.formTap==2}"><a ng-click="appState.formTap=2">blocks</a></li>
@@ -97,7 +117,7 @@
           <div block-root ng-show="appState.formTap==2"></div>
                 <button type="button" class="btn btn-danger" ng-click="deleteAction()" ng-show="selectedIndex >= 0">Delete action</button>
         </div>
-        <div class="col-md-4">
+        <div class="col-sm-4">
           <div device-android style="position: fixed"></div>
         </div>
 

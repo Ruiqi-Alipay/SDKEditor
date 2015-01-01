@@ -230,6 +230,23 @@ app.factory("dataService", function($rootScope, $timeout) {
 				}
 			}
 		};
+
+		var assembleBlocks = function(resultArray, sourceArray) {
+			sourceArray.forEach(function(value, index) {
+				resultArray[index] = moduleMap[value.name];
+				if (value.array) {
+					resultArray[index].value = [];
+					assembleBlocks(resultArray[index].value, value.array);
+				}
+			});
+		};
+
+		var saveCurrentForm = function() {
+			if (selectedForm && blockPositionTree[0].array) {
+				selectedForm.blocks = [];
+				assembleBlocks(selectedForm.blocks, blockPositionTree[0].array);
+			}
+		};
 	function parseBackground (imageCode) {
 		if (imageCode === 'local:middle_line') {
 			return '#C0C0C0';
@@ -303,7 +320,7 @@ app.factory("dataService", function($rootScope, $timeout) {
 						'image', 'text', 'filter', 'css', 'display', 'submit', 'checkInput'],
 			label: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color', 'size',
 						'image', 'text', 'text-align', 'filter', 'html', 'underline', 'css', 'display'],
-			img: ['width','height', 'src', 'align', 'vertical-align', 'margin', 'padding', 'color',
+			img: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color',
 						'image', 'css', 'display'],
 			icon: ['width','height', 'align', 'vertical-align', 'margin', 'padding', 'color',
 						'image', 'css', 'display'],
@@ -392,6 +409,7 @@ app.factory("dataService", function($rootScope, $timeout) {
 	var highlightView = {
 		elementId: ''
 	};
+	var manualCreateId;
 
 	return {
 		setBottombar: function(bar) {
@@ -401,6 +419,8 @@ app.factory("dataService", function($rootScope, $timeout) {
 			return bottomBar;
 		},
 		assembleScript: function() {
+			saveCurrentForm();
+
 			var script = {};
 			jQuery.extend(script, scriptRoot);
 			script.form = {};
@@ -444,6 +464,8 @@ app.factory("dataService", function($rootScope, $timeout) {
 				return;
 			}
 
+			saveCurrentForm();
+
 			selectedFormIndex = index;
 			selectedForm = index < 0 ? mainForm : actionList[index];
 			moduleMap = {};
@@ -475,6 +497,27 @@ app.factory("dataService", function($rootScope, $timeout) {
 			return scriptRoot;
 		},
 		loadScript: function(newScript) {
+			if (!newScript || !newScript.form) {
+				actionList.length = 0;
+				mainForm = {
+					parameter: {
+						form: {}
+					},
+					blocks: []
+				};
+				selectedForm = mainForm;
+				selectedFormIndex = -1;
+				scriptRoot = {};
+				moduleMap = {};
+				moduleStyleMap = {};
+				blockPositionTree[0].array = [];
+				bottomBar = undefined;
+				highlightView = {
+					elementId: ''
+				};
+				$rootScope.$broadcast('sdk:newScriptLoaded');
+				return;
+			}
 			selectedFormIndex = -2;
 
 			var mainBlocks = newScript.form.blocks;
@@ -586,7 +629,7 @@ app.factory("dataService", function($rootScope, $timeout) {
 						if (module.image.slice(0, 6) === 'local:') {
 							style['src'] = 'res/' + module.image.slice(6) + '.png';
 						} else {
-							style['src'] = module.image;
+							style['src'] = 'res/' + module.image + '.png';
 						}
 					}
 				}
@@ -782,7 +825,11 @@ app.factory("dataService", function($rootScope, $timeout) {
 			return variable.value[key];
 		},
 		createModule: function(compile, scope, target, position, type, parentId, block) {
-			return createModule(compile, scope, target, position, type, parentId, block)
+			manualCreateId = createModule(compile, scope, target, position, type, parentId, block);
+			return manualCreateId;
+		},
+		getManualCreateId: function() {
+			return manualCreateId;
 		},
         recursiveProcessModule: function(compile, scope, container, parentId, values) {
         	var newTask = 0;

@@ -10,12 +10,21 @@ app.directive("deviceAndroid", function($compile, $rootScope, dataService) {
             dataService.setBottombar(bottomBar);
             scope.style = dataService.getModuleCssStyle('root');
 
+            scope.$on('sdk:newScriptLoaded', function(event) {
+                var target = element.find(".activity");
+                target.html('');
+                bottomBar.html('');
+                scope.style = dataService.getModuleCssStyle('root');
+                scope.formParameters = dataService.getSelectedFormParameters();
+                $rootScope.$broadcast('sdk:actionBarChange');
+            });
             scope.$on('sdk:panelSelectionChange', function(event) {
                 var target = element.find(".activity");
                 target.html('');
                 bottomBar.html('');
                 scope.style = dataService.getModuleCssStyle('root');
                 scope.formParameters = dataService.getSelectedFormParameters();
+                $rootScope.$broadcast('sdk:actionBarChange');
             });
             scope.$on('append:root', function(event, elementId) {
                 var target = element.find(".activity");
@@ -29,7 +38,6 @@ app.directive("deviceAndroid", function($compile, $rootScope, dataService) {
                 var target = element.find(".activity");
                 dataService.recursiveProcessView($compile, scope, target, 'root');
                 scope.formParameters = dataService.getSelectedFormParameters();
-                $rootScope.$broadcast('sdk:actionBarChange');
             });
             scope.$watch('formParameters', function(newValue, oldValue) {
                 if (!newValue || !newValue.form) {

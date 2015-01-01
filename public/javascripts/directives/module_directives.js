@@ -46,6 +46,10 @@ app.directive("blockRoot", function ($compile, $rootScope, dataService) {
                     scope.addNewtask(result);
                 }
             });
+            scope.$on('sdk:newScriptLoaded', function(event) {
+                var connatiner = element.find("#root");
+                connatiner.html('');
+            });
         }
     };
 });
@@ -193,10 +197,10 @@ app.directive("blockModule", function ($compile, $rootScope, $location, $anchorS
                     }
                 });
                 scope.$on('module:close-' + scope.ctrl.elementId, function(event) {
-                    element.find('.collapse').collapse('hide');
+                    element.find('#' + scope.ctrl.elementId + '-body').collapse('hide');
                 });
                 scope.$on('module:open-' + scope.ctrl.elementId, function(event) {
-                    element.find('.collapse').collapse('show');
+                    element.find('#' + scope.ctrl.elementId + '-body').collapse('show');
                 });
                 scope.$on('module:open-' + scope.ctrl.elementId + '-finished', function(event) {
                     $location.hash(scope.ctrl.elementId + '-body');
@@ -210,6 +214,10 @@ app.directive("blockModule", function ($compile, $rootScope, $location, $anchorS
                 }
 
                 scope.moduleLoadFinished();
+
+                if (attr.elementId === dataService.getManualCreateId()) {
+                    element.find('#' + scope.ctrl.elementId + '-body').collapse('show');
+                }
 		    };
     	}
   	};

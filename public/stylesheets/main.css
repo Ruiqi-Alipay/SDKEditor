@@ -7,7 +7,9 @@
 				padding-top: 70px;
 				overflow-x: hidden;
 			}
-			a {
+			button:focus {outline:0;}
+			
+			.underline {
     			text-decoration: underline;
 			}
 			.custom-file-input::-webkit-file-upload-button {
